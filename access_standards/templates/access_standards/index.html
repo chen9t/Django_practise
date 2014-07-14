@@ -1,0 +1,48 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+    <head>
+        <title>准入标准信息查询</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <script type="text/javascript" src="http://ajax.microsoft.com/ajax/jquery/jquery-1.4.min.js"></script>
+    </head>
+
+    <body>
+
+
+        <label for="city">城市:</label> 
+        <input type="text" name="city">
+        <input type="submit" value="查询" id="search"></input>
+
+        <p>
+        城市： <span id="city"></span><br />
+        排放标准：<span id="emission_standard"></span><br />
+        标准细节：<span id="standard_details"></span><br />
+        车 管 所：<span id="DVM"></span><br />
+        </p>
+
+    </body>
+
+    <script>
+$(function(){
+
+    $("#search").click(function(){
+        var TheCity = $("input[name='city']").val();
+        var cityInfo = {
+            city:TheCity
+        };
+        $.ajax({
+            url:'',
+            type:'GET',
+            dataType:'json',
+            data:cityInfo,
+            success:function(standard){
+                $('#city').text(standard.city);
+                $('#emission_standard').text(standard.emission_standard);
+                $('#standard_details').text(standard.standard_details);
+                $('#DVM').text(standard.DVM);
+            }
+        });
+    });
+});
+</script>
+</html>
