@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from django.http import HttpResponse
 from django.shortcuts import render_to_response, get_object_or_404
-from django.template import RequestContext
+#from django.template import RequestContext
 from access_standards.models import AccessStandard
 from django.utils import simplejson
 
@@ -21,11 +21,11 @@ def index(request):
 
 def standard(request):
 
-    if request.method == 'POST' and 'standard' in request.POST:
+    if request.method == 'GET' and 'standard' in request.GET:
 
-        standard = request.POST['standard']
+        standard = request.GET['standard']
         s = AccessStandard.objects.filter(emission_standard=standard)
 
-        return render_to_response('search.html', {'city_list': s}, context_instance=RequestContext(request))
+        return render_to_response('search.html', {'city_list': s})
     else:
-        return render_to_response('search.html', context_instance=RequestContext(request))
+        return render_to_response('search.html')

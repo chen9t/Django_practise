@@ -6,10 +6,10 @@ from django.shortcuts import render_to_response
 def query(request):
 
     if request.method == 'POST':
-        provincename = request.POST['province']
-        cityname = request.POST['cityname']
-        hphm = request.POST['license_plate_num']
-        engineno = request.POST['engine_no']
+        provincename = request.POST.get('province', '')
+        cityname = request.POST.get('cityname', '')
+        hphm = request.POST.get('license_plate_num', '')
+        engineno = request.POST.get('engine_no', '')
 
         payload = {'city': 'nanjing', 'hphm': hphm, 'hpzl': '02', 'engineno': engineno, 'cityname': cityname, 'provincename': provincename, 'format': 'json'}
 
