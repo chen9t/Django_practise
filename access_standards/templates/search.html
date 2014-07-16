@@ -1,0 +1,45 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+    <head>
+        <title>准入标准信息查询</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <script type="text/javascript" src="http://ajax.microsoft.com/ajax/jquery/jquery-1.4.min.js"></script>
+    </head>
+
+    <body>
+
+        <div>
+
+            <a href="/access_standards/">按城市查询</a>
+            <span> | </span>
+            <a href="/access_standards/standard/">按标准号查询</a>
+
+        </div>
+
+        <form action="/access_standards/standard/" method="post">
+            {% csrf_token %} 
+            <select name="standard">
+            <option value="国2排放（欧2）">国2排放（欧2）</option>
+            <option value="国3排放（欧3）">国3排放（欧3）</option>
+            <option value="国4排放（欧4）">国4排放（欧4）</option>
+            <option value="国5排放（欧5）">国5排放（欧5）</option>
+            <option value="其他">其他</option>
+            </select>
+            <input type="submit" value="查询"></input>
+        </form>
+
+        <div>
+        
+        <h4> cities: </h4>
+
+            <ol>
+                {% for city in city_list %}
+                <li>{{ city.city }}</a></li>
+                {% endfor %}
+            </ol>
+
+        </div>
+
+    </body>
+
+</html>
