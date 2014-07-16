@@ -1,0 +1,46 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+    <head>
+        <title> 车辆违章查询</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    </head>
+
+    <body>
+
+        <form action="/vehicle_violation_query/" method="post">
+            {% csrf_token %} 
+            省份: 
+            <input type="text" name="province" />
+            城市: 
+            <input type="text" name="cityname" />
+            <br />
+            车牌号码: 
+            <input type="text" name="license_plate_num" />
+            <br />
+            发动机号: 
+            <input type="text" name="engine_no" />
+            <br />
+            <input type="submit" value="查询"></input>
+        </form>
+
+        <div>
+        <h4> 违章记录: </h4>
+
+            <ol>
+                {% for record in record_list %}
+                    <li><p>
+                    违章时间： <span>{{ record.date }}</span><br />
+                    违章地点：<span>{{ record.area }}</span><br />
+                    违章行为：<span>{{ record.act }}</span><br />
+                    罚款：<span>{{ record.money }}</span><br />
+                    记分：<span>{{ record.fen }}</span><br />
+                    处理情况：<span>{{ record.chuli }}</span><br />
+                </p></li>
+                {% endfor %}
+            </ol>
+
+        </div>
+
+    </body>
+
+</html>

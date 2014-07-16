@@ -1,2 +1,3 @@
 Django项目练习：
-1.access_standard:迁入、迁出标准
+1.access_standard:迁入、迁出标准;
+2.vehicle_violation_query:车辆违章记录查询；
