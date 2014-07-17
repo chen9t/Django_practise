@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from django.http import HttpResponse
 from django.shortcuts import render_to_response, get_object_or_404
-#from django.template import RequestContext
 from access_standards.models import AccessStandard
 from django.utils import simplejson
 
@@ -25,7 +24,7 @@ def standard(request):
 
         standard = request.GET['standard']
         s = AccessStandard.objects.filter(emission_standard=standard)
-
+        print type(s)
         return render_to_response('search.html', {'city_list': s})
     else:
         return render_to_response('search.html')
