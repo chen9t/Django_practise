@@ -4,49 +4,54 @@ from django.template import RequestContext
 from django.shortcuts import render_to_response
 from vehicle_violation_query.models import City, CarInfo, ViolationRecord
 from django.core.exceptions  import ObjectDoesNotExist
+from vehicle_violation_query.forms import CarInfoForm
 from requests.exceptions import Timeout
 
 def query(request):
     '''发送请求，并获得数据'''
     if request.method == 'POST':
-        #获取查询参数
-        query_info = request.POST.copy()
-        #获得记录信息
-        payload, hphm, engineno = get_record(query_info)
-        #发送请求
-        r = send_request(request, payload)
+        # 从表单获取查询参数
+        car_info_form = CarInfoForm(request.POST)
 
-        if r.json()['vehicle_status'] == 'ok':
-            #车辆信息无误
-            if 'lists' not in r.json()['data']:
-                #没有违章记录
-                return render_to_response('query.html', {'error_msg': '恭喜您，没有违章记录！'}, context_instance=RequestContext(request))
+        if car_info_form.is_valid(): #验证合法
+            #获得记录信息
+            payload, hphm, engineno = get_record(car_info_form)
+            #发送请求
+            r = send_request(request, payload)
+
+            if r.json()['vehicle_status'] == 'ok':
+                #车辆信息无误
+                if 'lists' not in r.json()['data']:
+                    #没有违章记录
+                    return render_to_response('query.html', {'error_msg': '恭喜您，没有违章记录！'}, context_instance=RequestContext(request))
+                else:
+                    #有违章记录
+                    record_list = r.json()['data']['lists']
+                    #将记录按照日期进行排序
+                    record_list.sort(key=lambda obj:obj.get('date'), reverse=True)
+                    #将数据存入数据库（包括未录入的车和违章信息）
+                    store_record(hphm, engineno, record_list)
+                    #返回违章信息
+                    return render_to_response('query.html', {'form': car_info_form, 'record_list': record_list}, context_instance=RequestContext(request))
             else:
-                #有违章记录
-                record_list = r.json()['data']['lists']
-                #将记录按照日期进行排序
-                record_list.sort(key=lambda obj:obj.get('date'), reverse=True)
-                #将数据存入数据库（包括未录入的车和违章信息）
-                store_record(hphm, engineno, record_list)
-                #返回违章信息
-                return render_to_response('query.html', {'record_list': record_list}, context_instance=RequestContext(request))
+                #输入车辆信息有误
+                return render_to_response('query.html', {'error_msg': '您输入的信息有误，请校验后重新查询！'}, context_instance=RequestContext(request))
         else:
-            #输入车辆信息有误
-            return render_to_response('query.html', {'error_msg': '您输入的信息有误，请校验后重新查询！'}, context_instance=RequestContext(request))
+            return render_to_response('query.html', {'form': car_info_form}, context_instance=RequestContext(request))
     else:
-        return render_to_response('query.html', context_instance=RequestContext(request))
+        return render_to_response('query.html', {'form': CarInfoForm}, context_instance=RequestContext(request))
 
-def get_record(query_info):
-    '''获取查询参数'''
-    provincename = query_info['province']
-    cityname = query_info['cityname']
-    car_province = query_info['car_province']
-    license_plate_num= query_info['license_plate_num']
-    engineno = query_info['engine_no']
+def get_record(car_info_form):
+    '''验证并获取查询参数'''
+    provincename = car_info_form.cleaned_data['province']
+    cityname = car_info_form.cleaned_data['cityname']
+    car_province = car_info_form.cleaned_data['car_province']
+    license_plate_num= car_info_form.cleaned_data['license_plate_num']
+    engineno = car_info_form.cleaned_data['engine_no']
     hphm = ''.join([car_province, license_plate_num])
-    city = City.objects.exclude(id=0).get(name=cityname)
+    c = City.objects.exclude(id=0).get(name=cityname)
     #写入参数
-    payload = {'city': city.pinyin, 'hphm': hphm, 'hpzl': '02', 'engineno': engineno, 'cityname': cityname, 'provincename': provincename, 'format': 'json'}
+    payload = {'city': c.pinyin, 'hphm': hphm, 'hpzl': '02', 'engineno': engineno, 'cityname': cityname, 'provincename': provincename, 'format': 'json'}
     return (payload, hphm, engineno)
 
 def send_request(request, payload):

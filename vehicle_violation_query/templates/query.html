@@ -9,18 +9,37 @@
 
         <form action="/vehicle_violation_query/" method="post">
             {% csrf_token %} 
-            省份: 
-            <input type="text" name="province" />
-            城市: 
-            <input type="text" name="cityname" />
-            <br />
-            车牌号码: 
-            <input type="text" name="car_province" />
-            <input type="text" name="license_plate_num" />
-            <br />
-            发动机号: 
-            <input type="text" name="engine_no" />
-            <br />
+
+            <div>
+                {{ form.province.errors }}
+                <label for="id_province">省份:</label>
+                {{ form.province }}
+            </div>
+
+            <div>
+                {{ form.cityname.errors }}
+                <label for="id_cityname">城市:</label>
+                {{ form.cityname }}
+            </div>
+
+            <div>
+                {{ form.car_province.errors }}
+                <label for="id_car_province">车牌所属:</label>
+                {{ form.car_province}}
+            </div>
+
+            <div>
+                {{ form.license_plate_num.errors }}
+                <label for="id_license_plate_num">车牌号码:</label>
+                {{ form.license_plate_num}}
+            </div>
+
+            <div>
+                {{ form.engine_no.errors }}
+                <label for="id_engine_no">发动机号:</label>
+                {{ form.engine_no}}
+            </div>
+
             <input type="submit" value="查询"></input>
         </form>
 
