@@ -1,5 +1,6 @@
 from django.db import models
 
+
 class City(models.Model):
 
     name = models.CharField(max_length=40)
@@ -12,13 +13,11 @@ class City(models.Model):
     class Meta:
         db_table = 'city'
 
+
 class CarInfo(models.Model):
 
-    license_plate_num = models.CharField(max_length=10)
-    engine_no = models.CharField(max_length=10)
-
-    # def __unicode__(self):
-    #     return self.license_plate_num
+    license_plate_num = models.CharField(max_length=6)
+    engine_no = models.CharField(max_length=6)
 
     class Meta:
         db_table = 'car_info'
@@ -26,7 +25,7 @@ class CarInfo(models.Model):
 
 class ViolationRecord(models.Model):
 
-    car_info = models.ForeignKey(CarInfo)
+    car_info = models.ForeignKey(CarInfo, db_column='car_info')
     area = models.CharField(max_length=50)
     money = models.IntegerField()
     chuli = models.CharField(max_length=10)
