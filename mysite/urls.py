@@ -18,5 +18,6 @@ urlpatterns = patterns('',
     # Uncomment the next line to enable the admin:
     url(r'^admin/', include(admin.site.urls)),
     url(r'^access_standards/', include('access_standards.urls')),
-    url(r'^vehicle_violation_query/', include('vehicle_violation_query.urls'))
+    url(r'^vehicle_violation_query/', include('vehicle_violation_query.urls')),
+    url(r'^insurance_query/', include('insurance_query.urls'))
 )
