@@ -8,73 +8,6 @@ SERVICE_URL = 'http://106.37.176.173:9080/phoneserver/phserver'
 TIME_OUT = 10
 
 
-class XMLParse(object):
-
-    def __init__(self, xml_stream):
-        self.doctree = etree.fromstring(xml_stream)
-
-    @property  
-    def error(self):
-        """ 
-        判断请求内容是否有误
-        
-        @return: 错误：{错误码:错误消息}；成功:None
-        """
-        
-        if not int(self._doctree.xpath('//ResponseCode')[0].text):
-            errcode = self._doctree.xpath('//ErrorCode')[0].text
-            errmsg = self._doctree.xpath('//ErrorMessage')[0].text
-            return {errcode:errmsg, }
-        else:
-            return None
-        
-    @property      
-    def totalpage(self):
-        """ 总的页数 """
-        return int(self._doctree.xpath('//TotalPage')[0].text)
-    
-    @property  
-    def pageno(self):
-        """ 当前文档的页数号 """
-        return int(self._doctree.xpath('//PageNo')[0].text)
-    
-    @property  
-    def totalelems(self):
-        """ 当前文档的总保险单号数目 """
-        return int(self._doctree.xpath('//TotalCount')[0].text)
-    
-    @property
-    def elems(self):
-        """ 得到当前文档包含的保险单号元素
-        
-        每个元素的内容列表包括：
-        PolicyNo[M]         保单号
-        OperateDate[M]      签单时间
-        StartDate[M]        起保时间
-        EndDate[M]          终保时间
-        LicenseNo[M]        车牌号
-        CompanyCode[M]      承保公司
-        RiskType[M]         险种类型
-        
-        ClaimStatus[O]      案件状态
-        ClaimQueryNo[O]     理赔编码
-        EstimateLoss[O]     赔款金额
-        SumPaid[O]          总付款
-        DamageDate[O]       出险时间
-        ReportDate[O]       报案时间
-        ClaimDate[O]        立案时间
-        EndcaseDate[O]      结案时间
-        DriverName[O]       损害赔偿责任
-        """
-        res = []
-        for elem in self._doctree.xpath('//ClaimData'):
-            elem_dic = {}
-            for chelem in elem:
-                elem_dic[chelem.tag] = chelem.text
-            res.append(elem_dic)
-        return res
-
-
 class GetXMLResponse(object):
 
     def __init__(self, query_type, **kwargs):
@@ -151,6 +84,74 @@ class GetXMLResponse(object):
             return r.text
         else:
             r.raise_for_status()
+
+
+class ParseXML(object):
+
+    def __init__(self, xml_stream):
+        self.doctree = etree.fromstring(xml_stream)
+
+    @property  
+    def error(self):
+        """ 
+        判断请求内容是否有误
+        
+        @return: 错误：{错误码:错误消息}；成功:None
+        """
+        
+        if not int(self._doctree.xpath('//ResponseCode')[0].text):
+            errcode = self._doctree.xpath('//ErrorCode')[0].text
+            errmsg = self._doctree.xpath('//ErrorMessage')[0].text
+            return {errcode:errmsg, }
+        else:
+            return None
+        
+    @property      
+    def totalpage(self):
+        """ 总的页数 """
+        return int(self._doctree.xpath('//TotalPage')[0].text)
+    
+    @property  
+    def pageno(self):
+        """ 当前文档的页数号 """
+        return int(self._doctree.xpath('//PageNo')[0].text)
+    
+    @property  
+    def totalelems(self):
+        """ 当前文档的总保险单号数目 """
+        return int(self._doctree.xpath('//TotalCount')[0].text)
+    
+    @property
+    def elems(self):
+        """ 得到当前文档包含的保险单号元素
+        
+        每个元素的内容列表包括：
+        PolicyNo[M]         保单号
+        OperateDate[M]      签单时间
+        StartDate[M]        起保时间
+        EndDate[M]          终保时间
+        LicenseNo[M]        车牌号
+        CompanyCode[M]      承保公司
+        RiskType[M]         险种类型
+        
+        ClaimStatus[O]      案件状态
+        ClaimQueryNo[O]     理赔编码
+        EstimateLoss[O]     赔款金额
+        SumPaid[O]          总付款
+        DamageDate[O]       出险时间
+        ReportDate[O]       报案时间
+        ClaimDate[O]        立案时间
+        EndcaseDate[O]      结案时间
+        DriverName[O]       损害赔偿责任
+        """
+        res = []
+        for elem in self._doctree.xpath('//ClaimData'):
+            elem_dic = {}
+            for chelem in elem:
+                elem_dic[chelem.tag] = chelem.text
+            res.append(elem_dic)
+        return res
+
 
 if __name__ == '__main__':
     res = GetXMLResponse('2', licenseno=u'苏A7ZA68', framelastsix='242191')
