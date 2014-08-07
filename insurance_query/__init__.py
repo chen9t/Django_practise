@@ -37,28 +37,28 @@ class GetXMLResponse(object):
     
         if self.query_type=='1':
             subelem = doc.makeelement('PolicyNo')
-            subelem.text = self.query_fileds['policyno']
+            subelem.text = self.query_fileds['policy_no']
             param_elem.append(subelem)
         
         elif self.query_type=='2':
             subelem = doc.makeelement('LicenseNo')
-            subelem.text = self.query_fileds['licenseno']
+            subelem.text = self.query_fileds['license_no']
             param_elem.append(subelem)
             subelem = doc.makeelement('FrameLastSixNo')
-            subelem.text = self.query_fileds['framelastsix']
+            subelem.text = self.query_fileds['frame_last_six_no']
             param_elem.append(subelem)
         
         elif self.query_type=='3':
             subelem = doc.makeelement('FrameLastSixNo')
-            subelem.text = self.query_fileds['framelastsix']
+            subelem.text = self.query_fileds['frame_last_six_no']
             param_elem.append(subelem)
             subelem = doc.makeelement('EngineLastSixNo')
-            subelem.text = self.query_fileds['enginelastsix']
+            subelem.text = self.query_fileds['engine_last_six_no']
             param_elem.append(subelem)
         
         else:
             subelem = doc.makeelement('FrameNo')
-            subelem.text = self.query_fileds['frameno']
+            subelem.text = self.query_fileds['frame_no']
             param_elem.append(subelem)
         
         subelem = doc.makeelement('PageNo')
@@ -81,7 +81,7 @@ class GetXMLResponse(object):
             raise Timeout
 
         if r.status_code == 200:
-            return r.text
+            return r.content
         else:
             r.raise_for_status()
 
@@ -89,7 +89,7 @@ class GetXMLResponse(object):
 class ParseXML(object):
 
     def __init__(self, xml_stream):
-        self.doctree = etree.fromstring(xml_stream)
+        self._doctree = etree.fromstring(xml_stream)
 
     @property  
     def error(self):
@@ -100,9 +100,8 @@ class ParseXML(object):
         """
         
         if not int(self._doctree.xpath('//ResponseCode')[0].text):
-            errcode = self._doctree.xpath('//ErrorCode')[0].text
             errmsg = self._doctree.xpath('//ErrorMessage')[0].text
-            return {errcode:errmsg, }
+            return errmsg,
         else:
             return None
         

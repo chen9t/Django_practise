@@ -1,13 +1,14 @@
+# -*- coding: utf-8 -*-
 import re
 
 from django import forms
 
 
-class QueryInfo(forms.form):
+class QueryInfoForm(forms.Form):
 
-    QUERY_TYPE_CHOICES = (('1', '根据保单号查询')
-                                            ('2', '根据车牌号和车架号后六位查询')
-                                            ('3', '根据车架号后六位和发动机号后六位查询')
+    QUERY_TYPE_CHOICES = (('1', '根据保单号查询'),
+                                            ('2', '根据车牌号和车架号后六位查询'),
+                                            ('3', '根据车架号后六位和发动机号后六位查询'),
                                             ('4', '根据车架号查询'))
 
     err_msg = {
@@ -23,15 +24,11 @@ class QueryInfo(forms.form):
     }
 
     query_type = forms.ChoiceField(
-        min_length=1,
-        max_length=1,
         required=True,
         choices=QUERY_TYPE_CHOICES,
         error_messages={
             'required': u'请选择查询方式',
             'invalid_choice': '请选择正确的查询方式',
-            'min_length': u'查询方式参数过短',
-            'max_length': u'查询方式参数过长'
         })
 
     policy_no = forms.CharField(
@@ -108,7 +105,8 @@ class QueryInfo(forms.form):
     #     return frame_no
 
     def clean(self):
-        query_type = self.cleaned_data['query_type']
+        print self.errors
+        query_type = self.cleaned_data.get('query_type', '')
 
         if query_type == '1':
             policy_no = self.cleaned_data.get('policy_no', '')
@@ -120,13 +118,21 @@ class QueryInfo(forms.form):
                     self.err_msg['wrong_policy_no'])
 
         elif query_type == '2':
-            license_no = self.cleaned_data('license_no', '')
+            license_no = self.cleaned_data.get('license_no', '')
             if not license_no:
                 raise forms.ValidationError(
                     self.err_msg['no_license_no'])
             elif not re.match(ur'^[京津沪渝冀豫云辽黑湘皖鲁苏赣浙粤鄂桂甘晋蒙陕吉闽贵青藏川宁新琼][A-Z][A-Z0-9]{5}$', license_no):
                 raise forms.ValidationError(
                     self.err_msg['wrong_license_no'])
+
+            frame_last_six_no = self.cleaned_data.get('frame_last_six_no', '')
+            if not frame_last_six_no:
+                raise forms.ValidationError(
+                    self.err_msg['no_frame_last_six_no'])
+            elif not re.match(r'^[0-9A-Z]{6}$', frame_last_six_no):
+                raise forms.ValidationError(
+                    self.err_msg['wrong_frame_last_six_no'])
 
         elif query_type == '3':
             frame_last_six_no = self.cleaned_data.get('frame_last_six_no', '')
@@ -142,8 +148,8 @@ class QueryInfo(forms.form):
                 raise forms.ValidationError(
                     self.err_msg['no_engine_last_six_no'])
 
-        else:
-            frame_no = self.cleaned_data('frame_no', '')
+        elif query_type == '4':
+            frame_no = self.cleaned_data.get('frame_no', '')
             if not frame_no:
                 raise forms.ValidationError(
                     self.err_msg['no_frame_no'])
