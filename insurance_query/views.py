@@ -41,7 +41,7 @@ class PostQueryInsurance(FormView, AjaxResponseMixin):
         record_list = []
         total_page = 1
         if xml_info.error:
-            self.update_errors(xml_info.error)
+            self.update_errors(xml_info.error[-1])
         else:
             record_list.extend(xml_info.elems)
             total_page = xml_info.totalpage

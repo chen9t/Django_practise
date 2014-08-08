@@ -3,6 +3,9 @@ import requests
 from requests.exceptions import Timeout
 from lxml import etree
 
+from insurance_query.models import CarInfo
+from insurance_query.models import InsuranceInfo
+
 
 SERVICE_URL = 'http://106.37.176.173:9080/phoneserver/phserver'
 TIME_OUT = 10
@@ -151,6 +154,53 @@ class ParseXML(object):
             res.append(elem_dic)
         return res
 
+
+class StoreInfo(object):
+
+    def __init__(self, query_type, **kwargs):
+
+        self.query_type = query_type
+        self.query_fileds = kwargs
+
+    def store_car_info(self):
+
+        license_no = self.query_fileds['license_no']
+        frame_last_six_no = self.query_fileds['frame_last_six_no']
+
+        car_info, created = CarInfo.objects.get_or_create(license_no=license_no,
+            defaults={'frame_last_six_no': frame_last_six_no})
+
+        return (car_info.license_no, created)
+
+    def store_insurance_info(self, license_no, car_not_exists, record_list):
+
+        need_to_insert = []
+        finsihed_records = []
+        claim_query_no_list = []
+        insert_list = []
+
+        for record in record_list:
+            claim_status = record_list.get('claim_status', '')
+            if claim_status == u'已结案':
+                finsihed_records.append(record)
+
+        if finsihed_records:
+            if car_not_exists:
+                need_to_insert = finsihed_records
+            else:
+                old_record_list = InsuranceInfo.objects.filter(car_info=license_no)
+                for old_record in old_record_list:
+                    claim_query_no_list.append(old_record.claim_query_no)
+                for finished_record in finsihed_records:
+                    if finished_record.claim_query_no not in claim_query_no_list:
+                        need_to_insert.append(finished_record)
+
+        if need_to_insert:
+            for new_record in need_to_insert:
+                insurance_info = InsuranceInfo(**new_record)
+                insert_list.append(insurance_info)
+
+        InsuranceInfo.objects.bulk_create(insert_list)
 
 if __name__ == '__main__':
     res = GetXMLResponse('2', licenseno=u'苏A7ZA68', framelastsix='242191')
