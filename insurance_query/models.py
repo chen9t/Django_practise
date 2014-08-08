@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from django.db import models
 
 class CarInfo(models.Model):
@@ -33,7 +34,7 @@ class InsuranceInfo(models.Model):
     #     EndcaseDate[O]      结案时间
     #     DriverName[O]       损害赔偿责任
 
-    car_info = models.ForeignKey(CarInfo, db_column='car_info', related_name='license_no', verbose_name=u'车辆信息')
+    car_info = models.ForeignKey(CarInfo, db_column='license_no', related_name='license_no', verbose_name=u'车辆信息')
     claim_status = models.CharField(max_length=5, verbose_name=u'案件状态')
     claim_query_no = models.CharField(max_length=50, verbose_name=u'理赔编码')
     policy_no = models.CharField(max_length=30, verbose_name=u'保单号')
@@ -50,8 +51,8 @@ class InsuranceInfo(models.Model):
     end_case_date = models.DateField(verbose_name=u'结案时间')
 
     risk_type = models.CharField(max_length=10, verbose_name=u'险种类型')
-    dirver_name = models.CharField(max_length=10, verbose_name=u'车牌号')
-    sum_paid = models.CharField(max_length=10, verbose_name=u'损害赔偿责任人')
+    dirver_name = models.CharField(max_length=10, verbose_name=u'损害赔偿责任人')
+    sum_paid = models.CharField(max_length=10, verbose_name=u'总付款')
     indemnity_duty = models.CharField(max_length=50, verbose_name=u'赔偿责任')
 
     class Meta:
