@@ -34,26 +34,30 @@ class InsuranceInfo(models.Model):
     #     EndcaseDate[O]      结案时间
     #     DriverName[O]       损害赔偿责任
 
-    car_info = models.ForeignKey(CarInfo, db_column='license_no', related_name='license_no', verbose_name=u'车辆信息')
-    claim_status = models.CharField(max_length=5, verbose_name=u'案件状态')
-    claim_query_no = models.CharField(max_length=50, verbose_name=u'理赔编码')
-    policy_no = models.CharField(max_length=30, verbose_name=u'保单号')
-    operate_date = models.DateField(verbose_name=u'签单时间')
-    start_date = models.DateField(verbose_name=u'起保时间')
-    end_date = models.DateField(verbose_name=u'终保时间')
+    LicenseNo = models.ForeignKey(CarInfo, db_column='car_info', verbose_name=u'车辆信息')
+    ClaimStatus = models.CharField(max_length=5, verbose_name=u'案件状态')
+    ClaimQueryNo = models.CharField(max_length=50, verbose_name=u'理赔编码')
+    PolicyNo = models.CharField(max_length=30, null=True, blank=True, verbose_name=u'保单号')
+    OperateDate = models.DateField(null=True, blank=True, verbose_name=u'签单时间')
+    StartDate = models.DateField(null=True, blank=True, verbose_name=u'起保时间')
+    EndDate = models.DateField(null=True, blank=True, verbose_name=u'终保时间')
 
-    company_code = models.CharField(max_length=40, verbose_name=u'承保公司')
-    estimate_loss = models.DecimalField(max_digits=10, decimal_places=2, verbose_name=u'赔款金额')
+    CompanyCode = models.CharField(max_length=40, null=True, blank=True, verbose_name=u'承保公司')
+    EstimateLoss = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name=u'赔款金额')
 
-    damage_date = models.DateField(verbose_name=u'出险时间')
-    report_date = models.DateField(verbose_name=u'报案时间')
-    claim_date = models.DateField(verbose_name=u'立案时间')
-    end_case_date = models.DateField(verbose_name=u'结案时间')
+    DamageDate = models.DateField(null=True, blank=True, verbose_name=u'出险时间')
+    ReportDate = models.DateField(null=True, blank=True, verbose_name=u'报案时间')
+    ClaimDate = models.DateField(null=True, blank=True, verbose_name=u'立案时间')
+    EndcaseDate = models.DateField(null=True, blank=True, verbose_name=u'结案时间')
 
-    risk_type = models.CharField(max_length=10, verbose_name=u'险种类型')
-    dirver_name = models.CharField(max_length=10, verbose_name=u'损害赔偿责任人')
-    sum_paid = models.CharField(max_length=10, verbose_name=u'总付款')
-    indemnity_duty = models.CharField(max_length=50, verbose_name=u'赔偿责任')
+    RiskType = models.CharField(max_length=10, null=True, blank=True, verbose_name=u'险种类型')
+    DriverName = models.CharField(max_length=10, null=True, blank=True, verbose_name=u'损害赔偿责任人')
+    SumPaid = models.CharField(max_length=10, null=True, blank=True, verbose_name=u'总付款')
+    IndemnityDuty = models.CharField(max_length=50, null=True, blank=True, verbose_name=u'赔偿责任')
+
 
     class Meta:
         db_table = 'insurance_info'
+
+    def __unicode__(self):
+        return self.claim_query_no

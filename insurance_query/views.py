@@ -9,6 +9,7 @@ from insurance_query.forms import QueryInfoForm
 
 from insurance_query import GetXMLResponse
 from insurance_query import ParseXML
+from insurance_query import StoreInfo
 
 from ajaxres import AjaxResponseMixin
 
@@ -24,12 +25,19 @@ class PostQueryInsurance(FormView, AjaxResponseMixin):
 
     def form_valid(self, form):        
         context = {}
+        record_list = []
+        insert_record = False
 
         query_type = form.cleaned_data['query_type']
         kwargs = form.cleaned_data
         kwargs.pop('query_type')
 
-        # First request, get the total pages
+        if query_type == '2':
+            info_storage = StoreInfo(query_type, **kwargs)
+            car_info, car_not_exists =  info_storage.store_car_info()
+            insert_record = True
+
+        # First request, get the total pages.
         try:
             xml_info = self.get_response(query_type, **kwargs)
         except Timeout:
@@ -37,18 +45,14 @@ class PostQueryInsurance(FormView, AjaxResponseMixin):
         except HTTPError:
             self.update_errors(self.err_msg['request_failure'])
 
-        # If the info is currect at the first request, don't need to check it again.
-        record_list = []
         total_page = 1
         if xml_info.error:
             self.update_errors(xml_info.error[-1])
         else:
-            record_list.extend(xml_info.elems)
             total_page = xml_info.totalpage
 
-        # The following requests mean to get the rest records.
-        if total_page > 1:
-            for page in xrange(2, total_page + 1):
+            # The following requests mean to get all records.
+            for page in xrange(1, total_page + 1):
                 kwargs.update({'pageno': str(page)})
                 try:
                     xml_info = self.get_response(query_type, **kwargs)
@@ -58,10 +62,18 @@ class PostQueryInsurance(FormView, AjaxResponseMixin):
                 except HTTPError:
                     self.update_errors(self.err_msg['request_failure'])
                     break
+                if xml_info.error:
+                    self.update_errors(xml_info.error[-1])
+                    break
                 else:
                     record_list.extend(xml_info.elems)
-         
-        context.update({'records': record_list})
+            else:
+                # If only get all records at a time, return the record list. Otherwise, return a blank list.
+                # For the reason that, any request in the loop above may get errors. When it happens, we should
+                # return error messgaes rather than part of the records we already got.
+                context.update({'records': record_list})
+                if insert_record: # Store records.
+                    info_storage.store_insurance_info(car_info, car_not_exists, record_list)
 
         return self.ajax_response(context)
 

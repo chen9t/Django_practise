@@ -170,41 +170,56 @@ class StoreInfo(object):
         car_info, created = CarInfo.objects.get_or_create(license_no=license_no,
             defaults={'frame_last_six_no': frame_last_six_no})
 
-        return (car_info.license_no, created)
+        return (car_info, created)
 
-    def store_insurance_info(self, license_no, car_not_exists, record_list):
+    def store_insurance_info(self, car_info, car_not_exists, record_list):
 
         need_to_insert = []
         claim_query_no_list = []
+        insert_list = []
 
         if car_not_exists: # New car, insert all
             need_to_insert = record_list
-        else: # Check if there are records
-            old_record_list = InsuranceInfo.objects.filter(car_info=license_no)
+        else: # Old cars, check if there are records
+            old_record_list = InsuranceInfo.objects.filter(LicenseNo=car_info)
 
-        if old_record_list.exists(): # Old record exists
+            if old_record_list.exists(): # Old record exists
 
-            for old_record in old_record_list: # Get the old records
-                claim_query_no_list.append(old_record.claim_query_no)
+                for old_record in old_record_list: # Get the old records
+                    claim_query_no_list.append(old_record.ClaimQueryNo)
 
-            for record in record_list:
-                claim_query_no = record.get('claim_query_no', '')
-                if claim_query_no: # Valid record
-                    if claim_query_no not in claim_query_no_list: # New record
+                for record in record_list:
+                    claim_query_no = record.get('ClaimQueryNo', '')
+                    if claim_query_no: # Valid record
+                        if claim_query_no not in claim_query_no_list: # New record
+                            need_to_insert.append(record)
+                        else: # Record already exists
+                            o_record = InsuranceInfo.objects.get(ClaimQueryNo=claim_query_no)
+
+                            if o_record.ClaimStatus != record['ClaimStatus']:
+                                # Update record when status changes.
+                                o_record.ClaimStatus = record.get('ClaimStatus', '')
+                                o_record.PolicyNo = record.get('PolicyNo', '')
+                                o_record.OperateDate = record.get('OperateDate', '')
+                                o_record.StartDate = record.get('StartDate', '')
+                                o_record.EndDate = record.get('EndDate', '')
+                                o_record.CompanyCode = record.get('CompanyCode', '')
+                                o_record.DamageDate = record.get('DamageDate', '')
+                                o_record.ReportDate = record.get('ReportDate', '')
+                                o_record.EstimateLoss = record.get('EstimateLoss', '')
+                                o_record.ClaimDate = record.get('ClaimDate', '')
+                                o_record.EndcaseDate = record.get('EndcaseDate', '')
+                                o_record.RiskType = record.get('RiskType', '')
+                                o_record.DriverName = record.get('DriverName', '')
+                                o_record.SumPaid = record.get('SumPaid')
+                                o_record.IndemnityDuty = record.get('IndemnityDuty', '')
+
+                                o_record.save()
+            else: # No old records, insert all
+                for record in record_list:
+                    claim_query_no = record.get('ClaimQueryNo', '')
+                    if claim_query_no:
                         need_to_insert.append(record)
-                    else: # Record already exists
-                        o_record = InsuranceInfo.objects.get(claim_query_no=claim_query_no)
-                        if o_record.claim_status != record['claim_status']:
-                            o_record.update(
-                                claim_status=record.get('claim_status', ''),
-                                estimate_loss=record.get('estimate_loss', ''),
-                                claim_date=record.get('claim_date', ''),
-                                end_case_date=record.get('end_case_date', ''),
-                                dirver_name=record.get('dirver_name', ''),
-                                sum_paid=record.get('sum_paid'),
-                                indemnity_duty=record.get('indemnity_duty', ''))
-        else: # No old records, insert all
-            need_to_insert = record_list
 
 
         # need_to_insert = []
@@ -213,7 +228,7 @@ class StoreInfo(object):
         # insert_list = []
 
         # for record in record_list:
-        #     claim_status = record_list.get('claim_status', '')
+        #     claim_status = record_list.get('ClaimStatus', '')
         #     if claim_status == u'已结案':
         #         finsihed_records.append(record)
 
@@ -221,19 +236,21 @@ class StoreInfo(object):
         #     if car_not_exists:
         #         need_to_insert = finsihed_records
         #     else:
-        #         old_record_list = InsuranceInfo.objects.filter(car_info=license_no)
+        #         old_record_list = InsuranceInfo.objects.filter(LicenseNo=car_info)
         #         for old_record in old_record_list:
-        #             claim_query_no_list.append(old_record.claim_query_no)
+        #             claim_query_no_list.append(old_record.ClaimQueryNo)
         #         for finished_record in finsihed_records:
-        #             if finished_record.claim_query_no not in claim_query_no_list:
+        #             if finished_record['ClaimQueryNo'] not in claim_query_no_list:
         #                 need_to_insert.append(finished_record)
 
         if need_to_insert:
             for new_record in need_to_insert:
+                ref_car = CarInfo.objects.get(license_no=new_record['LicenseNo'])
+                new_record.update(LicenseNo=ref_car)
                 insurance_info = InsuranceInfo(**new_record)
                 insert_list.append(insurance_info)
 
-        InsuranceInfo.objects.bulk_create(insert_list)
+            InsuranceInfo.objects.bulk_create(insert_list)
 
 if __name__ == '__main__':
     res = GetXMLResponse('2', licenseno=u'苏A7ZA68', framelastsix='242191')

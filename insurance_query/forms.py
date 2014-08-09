@@ -105,7 +105,6 @@ class QueryInfoForm(forms.Form):
     #     return frame_no
 
     def clean(self):
-        print self.errors
         query_type = self.cleaned_data.get('query_type', '')
 
         if query_type == '1':
