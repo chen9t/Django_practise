@@ -34,8 +34,14 @@ class PostQueryInsurance(FormView, AjaxResponseMixin):
 
         if query_type == '2':
             info_storage = StoreInfo(query_type, **kwargs)
-            car_info, car_not_exists =  info_storage.store_car_info()
+            car_info, car_not_exists =  info_storage.store_car_info1()
             insert_record = True
+
+        if query_type == '4':
+            info_storage = StoreInfo(query_type, **kwargs)
+            # car_info, car_not_exists = 
+            info_storage.store_car_info2()
+            # insert_record = True
 
         # First request, get the total pages.
         try:

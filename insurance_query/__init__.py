@@ -162,7 +162,7 @@ class StoreInfo(object):
         self.query_type = query_type
         self.query_fileds = kwargs
 
-    def store_car_info(self):
+    def store_car_info1(self):
 
         license_no = self.query_fileds['license_no']
         frame_last_six_no = self.query_fileds['frame_last_six_no']
@@ -171,6 +171,13 @@ class StoreInfo(object):
             defaults={'frame_last_six_no': frame_last_six_no})
 
         return (car_info, created)
+
+    def store_car_info2(self):
+
+        frame_no = self.query_fileds['frame_no']
+        car_info, created = CarInfo.objects.get_or_create(frame_no=frame_no)
+
+        # return (car_info, created)
 
     def store_insurance_info(self, car_info, car_not_exists, record_list):
 
