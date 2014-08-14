@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from django.db import models
 
 
@@ -16,11 +17,15 @@ class City(models.Model):
 
 class CarInfo(models.Model):
 
-    license_plate_num = models.CharField(max_length=6)
-    engine_no = models.CharField(max_length=6)
+    license_plate_num = models.CharField(max_length=7, null=True, blank=True, unique=True, verbose_name=u'车牌号')
+    engine_no = models.CharField(max_length=6, null=True, blank=True, verbose_name=u'发动机号')
+    VIN_last_six = models.CharField(max_length=6, null=True, blank=True, verbose_name=u'车架号后6位')
+    VIN = models.CharField(max_length=17, null=True, blank=True, verbose_name=u'车架号')
+    created_on = models.DateTimeField(auto_now_add=True, verbose_name=u'创建时间')
 
     class Meta:
         db_table = 'car_info'
+        verbose_name_plural = u'车辆信息'
 
 
 class ViolationRecord(models.Model):

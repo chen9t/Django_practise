@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
+import copy
+
 import requests
 from requests.exceptions import Timeout
 from lxml import etree
 
-from insurance_query.models import CarInfo
+from vehicle_violation_query.models import CarInfo
 from insurance_query.models import InsuranceInfo
 
-
-SERVICE_URL = 'http://106.37.176.173:9080/phoneserver/phserver'
-TIME_OUT = 10
+from insurance_query.query_settings import SERVICE_URL
+from insurance_query.query_settings import TIME_OUT
+from insurance_query.query_settings import QUERY_TYPE
 
 
 class GetXMLResponse(object):
@@ -26,7 +28,6 @@ class GetXMLResponse(object):
 
     def form_request_content(self):
         """ 请求的xml内容 """
-        assert(int(self.query_type) in range(1, 5))
     
         doc = etree.fromstring('<?xml version="1.0" encoding="GBK"?><Packet>'\
                             '<Head><RequestType>V002</RequestType><User>youke'\
@@ -35,25 +36,25 @@ class GetXMLResponse(object):
                            
         param_elem = doc.xpath('//BasePart')[0]
         qt_elem = doc.makeelement('QueryType')
-        qt_elem.text = '0'+self.query_type
+        qt_elem.text = '0' + QUERY_TYPE[self.query_type]
         param_elem.append(qt_elem)
-    
-        if self.query_type=='1':
+
+        if self.query_type=='by_policeno':
             subelem = doc.makeelement('PolicyNo')
             subelem.text = self.query_fileds['policy_no']
             param_elem.append(subelem)
-        
-        elif self.query_type=='2':
+
+        elif self.query_type=='by_licenseno_VIN':
             subelem = doc.makeelement('LicenseNo')
             subelem.text = self.query_fileds['license_no']
             param_elem.append(subelem)
             subelem = doc.makeelement('FrameLastSixNo')
-            subelem.text = self.query_fileds['frame_last_six_no']
+            subelem.text = self.query_fileds['VIN_last_six']
             param_elem.append(subelem)
-        
-        elif self.query_type=='3':
+
+        elif self.query_type=='by_VIN_engineno':
             subelem = doc.makeelement('FrameLastSixNo')
-            subelem.text = self.query_fileds['frame_last_six_no']
+            subelem.text = self.query_fileds['VIN_last_six']
             param_elem.append(subelem)
             subelem = doc.makeelement('EngineLastSixNo')
             subelem.text = self.query_fileds['engine_last_six_no']
@@ -61,7 +62,7 @@ class GetXMLResponse(object):
         
         else:
             subelem = doc.makeelement('FrameNo')
-            subelem.text = self.query_fileds['frame_no']
+            subelem.text = self.query_fileds['VIN']
             param_elem.append(subelem)
         
         subelem = doc.makeelement('PageNo')
@@ -165,28 +166,35 @@ class StoreInfo(object):
     def store_car_info1(self):
 
         license_no = self.query_fileds['license_no']
-        frame_last_six_no = self.query_fileds['frame_last_six_no']
+        VIN_last_six = self.query_fileds['VIN_last_six']
 
-        car_info, created = CarInfo.objects.get_or_create(license_no=license_no,
-            defaults={'frame_last_six_no': frame_last_six_no})
+        car_info, created = CarInfo.objects.get_or_create(license_plate_num=license_no,
+            defaults={'VIN_last_six': VIN_last_six})
+
+        if not created:
+            if not car_info.VIN_last_six:
+                car_info.VIN_last_six = VIN_last_six
+                car_info.save()
 
         return (car_info, created)
 
     def store_car_info2(self):
 
-        frame_no = self.query_fileds['frame_no']
-        car_info, created = CarInfo.objects.get_or_create(frame_no=frame_no)
+        VIN = self.query_fileds['VIN']
+        car_info, created = CarInfo.objects.get_or_create(VIN=VIN)
 
-        # return (car_info, created)
+        return (car_info, created)
 
     def store_insurance_info(self, car_info, car_not_exists, record_list):
 
+        candidate_list = copy.deepcopy(record_list)
         need_to_insert = []
         claim_query_no_list = []
+        policy_no_list = []
         insert_list = []
 
         if car_not_exists: # New car, insert all
-            need_to_insert = record_list
+            need_to_insert = candidate_list
         else: # Old cars, check if there are records
             old_record_list = InsuranceInfo.objects.filter(LicenseNo=car_info)
 
@@ -194,8 +202,9 @@ class StoreInfo(object):
 
                 for old_record in old_record_list: # Get the old records
                     claim_query_no_list.append(old_record.ClaimQueryNo)
+                    policy_no_list.append(old_record.PolicyNo)
 
-                for record in record_list:
+                for record in candidate_list:
                     claim_query_no = record.get('ClaimQueryNo', '')
                     if claim_query_no: # Valid record
                         if claim_query_no not in claim_query_no_list: # New record
@@ -222,44 +231,15 @@ class StoreInfo(object):
                                 o_record.IndemnityDuty = record.get('IndemnityDuty', '')
 
                                 o_record.save()
+
             else: # No old records, insert all
-                for record in record_list:
-                    claim_query_no = record.get('ClaimQueryNo', '')
-                    if claim_query_no:
-                        need_to_insert.append(record)
-
-
-        # need_to_insert = []
-        # finsihed_records = []
-        # claim_query_no_list = []
-        # insert_list = []
-
-        # for record in record_list:
-        #     claim_status = record_list.get('ClaimStatus', '')
-        #     if claim_status == u'已结案':
-        #         finsihed_records.append(record)
-
-        # if finsihed_records:
-        #     if car_not_exists:
-        #         need_to_insert = finsihed_records
-        #     else:
-        #         old_record_list = InsuranceInfo.objects.filter(LicenseNo=car_info)
-        #         for old_record in old_record_list:
-        #             claim_query_no_list.append(old_record.ClaimQueryNo)
-        #         for finished_record in finsihed_records:
-        #             if finished_record['ClaimQueryNo'] not in claim_query_no_list:
-        #                 need_to_insert.append(finished_record)
+                need_to_insert = candidate_list
 
         if need_to_insert:
             for new_record in need_to_insert:
-                ref_car = CarInfo.objects.get(license_no=new_record['LicenseNo'])
-                new_record.update(LicenseNo=ref_car)
-                insurance_info = InsuranceInfo(**new_record)
-                insert_list.append(insurance_info)
+                if new_record.get('ClaimQueryNo', ''):
+                    new_record.update(LicenseNo=car_info)
+                    insurance_info = InsuranceInfo(**new_record)
+                    insert_list.append(insurance_info)
 
             InsuranceInfo.objects.bulk_create(insert_list)
-
-if __name__ == '__main__':
-    res = GetXMLResponse('2', licenseno=u'苏A7ZA68', framelastsix='242191')
-    xml_stream = res.get_xml_stream()
-    print xml_stream

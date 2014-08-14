@@ -1,7 +1,7 @@
 from django.conf.urls import patterns, url
-from insurance_query.views import PostQueryInsurance
+from insurance_query.views import PostInsuranceQueryView
 
 
 urlpatterns = patterns('',
-    url(r'^$', PostQueryInsurance.as_view()),
+    url(r'^$', PostInsuranceQueryView.as_view()),
 )
