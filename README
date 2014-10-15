@@ -1,3 +1,5 @@
 Django项目练习：
 1.access_standard:迁入、迁出标准;
 2.vehicle_violation_query:车辆违章记录查询；
+3.insurance_query：车辆出险记录查询
+4.short_url：短链接生成
